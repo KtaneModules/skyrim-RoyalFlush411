@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 4463be9d0f8d74e0abc09ece72b763f0
+timeCreated: 1519735861
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: DarksSkyrimFont
+  fontNames:
+  - DarksSkyrimFont
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

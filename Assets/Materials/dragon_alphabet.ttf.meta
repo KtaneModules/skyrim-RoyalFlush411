@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 5577543478b7d4e8dbfd896f8c064653
+timeCreated: 1519746088
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: dragon_alphabet
+  fontNames:
+  - dragon_alphabet
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
