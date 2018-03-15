@@ -729,4 +729,152 @@ public class skyrimScript : MonoBehaviour
             }
         }
     }
+
+#pragma warning disable 414
+    private string TwitchHelpMessage = @"Use “!{0} cycle races weapons enemies cities shouts” to cycle any combination of the screens or “!{0} cycle” to cycle all of them. Use “!{0} set race Altmer”, “!{0} set weapon Bow of the Hunt” etc. to set indivual screens, or use “!{0} weapons” followed by “!{0} up/down” to select an image and “!{0} set” to set it. “!{0} submit” will press the Submit button. You may submit all at once by typing “!{0} submit Argonian, Mace of Molag Bal, Dragon Priest, Whiterun, Ice Form”.";
+#pragma warning restore 414
+
+    private bool equalsAnyNoCase(string str, params string[] options)
+    {
+        return options.Any(opt => opt.Equals(str, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    IEnumerable cycle(KMSelectable screen)
+    {
+        screen.OnInteract();
+        for (int i = 0; i < 3; i++)
+        {
+            yield return new WaitForSeconds(2f);
+            cycleDown.OnInteract();
+        }
+        yield return new WaitForSeconds(.3f);
+    }
+
+    private KMSelectable nameToSelectable(string name)
+    {
+        return
+            equalsAnyNoCase(name, "r", "race", "races") ? race :
+            equalsAnyNoCase(name, "w", "weapon", "weapons") ? weapon :
+            equalsAnyNoCase(name, "e", "enemy", "enemies") ? enemy :
+            equalsAnyNoCase(name, "c", "city", "cities", "place", "places", "location", "locations") ? city :
+            equalsAnyNoCase(name, "s", "shout", "shouts", "call", "calls") ? shout : null;
+    }
+
+    private bool isSelected(KMSelectable screen, string input)
+    {
+        var validOptions =
+            screen == shout ? shoutNameOptions : (
+                screen == race ? raceImages :
+                screen == weapon ? weaponImages :
+                screen == enemy ? enemyImages : cityImages
+            ).Select(tex => tex.name);
+        var curIndex =
+            screen == race ? raceIndex :
+            screen == weapon ? weaponIndex :
+            screen == enemy ? enemyIndex :
+            screen == city ? cityIndex : shoutIndex;
+        return validOptions.Skip(curIndex).First().Equals(input, StringComparison.InvariantCultureIgnoreCase);
+    }
+
+    private IEnumerable attemptToAccept(KMSelectable screen, string input)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (isSelected(screen, input))
+            {
+                accept.OnInteract();
+                yield break;
+            }
+            cycleDown.OnInteract();
+            yield return new WaitForSeconds(.1f);
+        }
+        yield return string.Format("sendtochaterror “{0}” is not a valid {1}.", input, screen == race ? "race" : screen == weapon ? "weapon" : screen == enemy ? "enemy" : screen == city ? "city" : "dragon shout");
+        yield return "unsubmittablepenalty";
+    }
+
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+        var pieces = command.ToLowerInvariant().Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        KMSelectable screen;
+
+        // Use “!{0} cycle races weapons enemies cities shouts” to cycle any combination of the screens or “!{0} cycle” to cycle all of them.
+        if (pieces.Length > 0 && pieces[0].Equals("cycle", StringComparison.InvariantCultureIgnoreCase))
+        {
+            var cyclers = pieces.Length == 1 ? new[] { race, weapon, enemy, city, shout } : pieces.Skip(1).Select(piece => nameToSelectable(piece)).ToArray();
+            if (cyclers.Any(c => c == null))
+                yield break;
+            yield return null;
+            foreach (var cycler in cyclers)
+                foreach (var obj in cycle(cycler))
+                    yield return obj;
+        }
+        // Use “!{0} set race Altmer”, “!{0} set weapon Bow of the Hunt” etc. to set indivual screens.
+        else if (pieces.Length > 2 && pieces[0].Equals("set", StringComparison.InvariantCultureIgnoreCase) && (screen = nameToSelectable(pieces[1])) != null)
+        {
+            yield return null;
+
+            screen.OnInteract();
+            yield return new WaitForSeconds(.1f);
+
+            // Re-split the original command to get the full input instead of just the first word.
+            var input = command.ToLowerInvariant().Trim().Split(new[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries)[2];
+
+            foreach (var obj in attemptToAccept(screen, input))
+                yield return obj;
+        }
+        // Use “!{0} weapons” (etc.) to select a screen...
+        else if (pieces.Length == 1 && (screen = nameToSelectable(pieces[0])) != null)
+        {
+            yield return null;
+            screen.OnInteract();
+        }
+        // ... followed by “!{0} up/down” to select an image...
+        else if (pieces.Length == 1 && equalsAnyNoCase(pieces[0], "u", "up", "d", "down"))
+        {
+            yield return null;
+            (equalsAnyNoCase(pieces[0], "u", "up") ? cycleUp : cycleDown).OnInteract();
+        }
+        // ... and “!{0} set” to set it.
+        else if (pieces.Length == 1 && equalsAnyNoCase(pieces[0], "set", "accept"))
+        {
+            yield return null;
+            accept.OnInteract();
+        }
+        // “!{0} submit” will press the Submit button.
+        else if ((pieces.Length == 1 && pieces[0].Equals("submit", StringComparison.InvariantCultureIgnoreCase)) ||
+            (pieces.Length == 2 && pieces[0].Equals("press", StringComparison.InvariantCultureIgnoreCase) && pieces[1].Equals("submit", StringComparison.InvariantCultureIgnoreCase)))
+        {
+            yield return null;
+            submit.OnInteract();
+        }
+        // You may submit all at once by typing “!{0} submit Argonian, Mace of Molag Bal, Dragon Priest, Whiterun, Ice Form”.";
+        else if (pieces.Length > 1 && pieces[0].Equals("submit", StringComparison.InvariantCultureIgnoreCase))
+        {
+            yield return null;
+
+            var allInput = command.ToLowerInvariant().Trim().Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries)[1];
+            var inputs = allInput.Split(',').Select(str => str.Trim()).ToArray();
+            if (inputs.Length != 5)
+            {
+                yield return "sendtochaterror You must specify five items separated by commas (race, weapon, enemy, city, dragon shout).";
+                yield break;
+            }
+
+            var screens = new[] { race, weapon, enemy, city, shout };
+            for (int i = 0; i < screens.Length; i++)
+            {
+                screens[i].OnInteract();
+                yield return new WaitForSeconds(.1f);
+
+                foreach (var obj in attemptToAccept(screens[i], inputs[i]))
+                    yield return obj;
+
+                if (!isSelected(screens[i], inputs[i]))
+                    yield break;
+            }
+
+            yield return new WaitForSeconds(.1f);
+            submit.OnInteract();
+        }
+    }
 }
