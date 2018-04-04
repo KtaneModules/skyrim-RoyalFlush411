@@ -30,6 +30,7 @@ public class skyrimScript : MonoBehaviour
     public List<Texture> cityImages;
     private List<String> shoutOptions = new List<string> { "fus\nro\ndah", "zun\nhal\nvik", "liz\nslen\nnus", "wuld\nnah\nkest", "jor\nzah\nfrul", "fas\nru\nmar", "yol\ntor\nshul", "kan\ndrem\nov", "tid\nklo\nul" };
     private List<String> shoutNameOptions = new List<string> { "Unrelenting Force", "Disarm", "Ice Form", "Whirlwind Sprint", "Dragonrend", "Dismay", "Fire Breath", "Kyne's Peace", "Slow Time" };
+    private List<String> allValidNames = new List<string>();
 
     //Renderers
     public Renderer mainDisplay;
@@ -108,6 +109,12 @@ public class skyrimScript : MonoBehaviour
 
     void Start()
     {
+        allValidNames.AddRange(raceImages.Select(t => t.name));
+        allValidNames.AddRange(weaponImages.Select(t => t.name));
+        allValidNames.AddRange(enemyImages.Select(t => t.name));
+        allValidNames.AddRange(cityImages.Select(t => t.name));
+        allValidNames.AddRange(shoutNameOptions);
+
         firstSerialCharacter = Bomb.GetSerialNumber().First();
         racePicker();
         weaponPicker();
@@ -744,7 +751,7 @@ public class skyrimScript : MonoBehaviour
         screen.OnInteract();
         for (int i = 0; i < 3; i++)
         {
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(3f);
             cycleDown.OnInteract();
         }
         yield return new WaitForSeconds(.3f);
@@ -788,8 +795,16 @@ public class skyrimScript : MonoBehaviour
             cycleDown.OnInteract();
             yield return new WaitForSeconds(.1f);
         }
-        yield return string.Format("sendtochaterror “{0}” is not a valid {1}.", input, screen == race ? "race" : screen == weapon ? "weapon" : screen == enemy ? "enemy" : screen == city ? "city" : "dragon shout");
-        yield return "unsubmittablepenalty";
+
+        if (allValidNames.Any(name => name.Equals(input, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            yield return string.Format("sendtochaterror “{0}” is not one of the {1} on this module.", input, screen == race ? "races" : screen == weapon ? "weapons" : screen == enemy ? "enemies" : screen == city ? "cities" : "dragon shouts");
+            yield return "unsubmittablepenalty";
+        }
+        else
+        {
+            yield return string.Format("sendtochaterror I don’t know what “{0}” is. Check for typos.", input);
+        }
     }
 
     IEnumerator ProcessTwitchCommand(string command)
