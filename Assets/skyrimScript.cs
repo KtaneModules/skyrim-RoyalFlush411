@@ -191,11 +191,11 @@ public class skyrimScript : MonoBehaviour
 
     void raceAnswer()
     {
-        if (raceImages.Any(x => x.name == "Imperial"))
+        if (Bomb.GetBatteryCount() < 3)
         {
             raceImages = raceImages.OrderBy(image => level1a.IndexOf(image)).ToList();
         }
-        else if (raceImages.Any(x => x.name == "Nord"))
+        else if (Bomb.GetBatteryCount() < 6)
         {
             raceImages = raceImages.OrderBy(image => level1b.IndexOf(image)).ToList();
         }
