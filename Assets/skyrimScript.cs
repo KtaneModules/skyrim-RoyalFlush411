@@ -70,6 +70,7 @@ public class skyrimScript : MonoBehaviour
     public TextMesh shoutLabel;
     public TextMesh shoutText;
     public TextMesh mainShoutText;
+    private String activeShout;
 
     //Misc textures
     public Texture screenMat;
@@ -674,6 +675,7 @@ public class skyrimScript : MonoBehaviour
         else if (shoutActive == true)
         {
             shoutText.gameObject.SetActive(true);
+            activeShout = shoutNameOptions[shoutIndex];
             shoutText.text = mainShoutText.text;
             shoutLabel.text = "";
         }
@@ -731,7 +733,7 @@ public class skyrimScript : MonoBehaviour
             }
             else
             {
-                Debug.LogFormat("[Skyrim #{0}] Strike! You selected {1}, {2}, {3}, {4} & {5} ({6}).", moduleId, raceRenderer.material.mainTexture.name, weaponRenderer.material.mainTexture.name, enemyRenderer.material.mainTexture.name, cityRenderer.material.mainTexture.name, shoutText.text.Replace("\n", "-"), shoutName);
+                Debug.LogFormat("[Skyrim #{0}] Strike! You selected {1}, {2}, {3}, {4} & {5} ({6}).", moduleId, raceRenderer.material.mainTexture.name, weaponRenderer.material.mainTexture.name, enemyRenderer.material.mainTexture.name, cityRenderer.material.mainTexture.name, shoutText.text.Replace("\n", "-"), activeShout);
                 GetComponent<KMBombModule>().HandleStrike();
             }
         }
