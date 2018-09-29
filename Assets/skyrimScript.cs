@@ -753,6 +753,7 @@ public class skyrimScript : MonoBehaviour
         {
             yield return new WaitForSeconds(3f);
             cycleDown.OnInteract();
+            yield return "trycancel cycling was aborted by a cancel command.";
         }
         yield return new WaitForSeconds(.3f);
     }
